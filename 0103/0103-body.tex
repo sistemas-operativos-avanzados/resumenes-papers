@@ -1,7 +1,7 @@
 El concepto de interrupción se ha expandido a través de los años. Diferentes fabricantes usan términos como \textit{exceptions, faults, aborts \textnormal{y} interrups} para describir este comportamiento. No hay un claro concenso ni un significado exacto.
-Una trampa (\textit{trap}) denota una transferencia de control iniciada y esperada de un programador hacia una rutina de manejo (\textit{handler routine}) en particular. Algunos textos se refieren a ellos como interrupciones de software. Las trampas son incondicionales, esto es, que cuando se ejecuta una instrucción \texttt{int}, el control siempre se transfiere al procedimiento asociado con la trampa. Dado que las trampas se ejecutan de modo explicíto, es fácil determinar exactamente cuales instrucciones van a invocar a una trampa en un programa. Una excepción es una trampa que se genera automáticamente(no se solicita). No hay una instrucción específica asociada para las excepciones. Una excepción ocurre en respuesta a algun comportamiente degenerativo en la ejecución normal de un programa. Cuando se presenta una excepción la CPU suspende la ejecución de la instrucción actual y transfiere el control a una rutina de manejo de excepción, la cuál decide qué hacer. Interrupciones de \textit{hardware} \textit{(hardware interrups)}, son interrupciones del control del programa a partir de eventos de \textit{hardware} externo que le informa al CPU que necesita atención. El CPU interrumpe la ejecución del programa actual, atiende el dispositivo y luego retorna el control de vuelta al programa. Una rutina de servicio de interrupción (\textit{interrup service routine -- ISR}) es un procedimiento escrito específicamente para manejar la trampa, excepción o interrupción.
+Una trampa (\textit{trap}) denota una transferencia de control iniciada y esperada de un programador hacia una rutina de manejo (\textit{handler routine}) en particular. Algunos textos se refieren a ellos como interrupciones de software. Las trampas son incondicionales, esto es, que cuando se ejecuta una instrucción \texttt{int}, el control siempre se transfiere al procedimiento asociado con la trampa. Dado que las trampas se ejecutan de modo explicíto, es fácil determinar exactamente cuales instrucciones van a invocar a una trampa en un programa. Una excepción es una trampa que se genera automáticamente(no se solicita). No hay una instrucción específica asociada para las excepciones. Una excepción ocurre en respuesta a algun comportamiente degenerativo en la ejecución normal de un programa. Cuando se presenta una excepción la CPU suspende la ejecución de la instrucción actual y transfiere el control a una rutina de manejo de excepción, la cuál decide qué hacer. Interrupciones de \textit{hardware} \textit{(hardware interrups)}, son interrupciones del control del programa a partir de eventos de \textit{hardware} externo que le informa al CPU que necesita atención. El CPU interrumpe la ejecución del programa actual, atiende el dispositivo y luego retorna el control de vuelta al programa. Una rutina de servicio de interrupción (\textit{interrupt service routine -- ISR}) es un procedimiento escrito específicamente para manejar la trampa, excepción o interrupción.
 
-\paragraph{\textnormal{\textbf{80x86 Interrup Structure and Interrup Services Routines(ISRs)}}}
+\paragraph{\textnormal{\textbf{80x86 Interrupt Structure and Interrupt Services Routines(ISRs)}}}
 El chip de la 80x86 permite hasta 256 interrupciones vectorizadas: 256 fuentes diferentes para una interrupción en donde la 80x86 llamará directamente a la rutina sin procesamientos intermedios. Las interrupciones no-vectorizadas transfieren el control a un único ISR independientemente de la fuente de la interrupción. La 80x86 provee una tabla de interrupciones de 256 entradas iniciando en la dirección 0:0 en memoria. Esta es una tabla de 1K que contiene 256 entradas de 4 bytes. Cada entrada en esta tabla contiene una dirección que apunta al ISR en memoria (0:0, 0:4, 0:8, etc). Las excepciones y las interrupciones de \textit{hardware} tiene una reestricción: tienen que preservar el estado del CPU, en particular tienen que preservar todos los registros que modifica.
 
 \paragraph{\textnormal{\textbf{Traps}}}
@@ -26,30 +26,30 @@ Las interrupciones vienen de varias fuentes: teclado, puertos seriales y paralel
 %\paragraph{The 8559A Programable Interrup Controller (PIC)}
 
 \begin{enumerate}
-    \item \textit{The Timer Interrup \texttt{(INT 8)}}: La tarjeta madre contiene un chip temporizador con tres canales, uno de los caules genera interrupciones cada 55 msec.
-    \item \textit{The Keyboard Interrup \texttt{(INT 9)}}: genera dos interrupciones en cada pulsación de tecla: una cuando se presiona y otra cuando se libera.
-    \item \textit{The Serial Port Interrups \texttt{(INT 0Bh} and \texttt{INT 0Ch)}}: el chip de comunicaciones seriales genera una interrupción si: un caracter arriba a la línea serial, si finaliza la comunicación, si ocurre un error o si hay un cambio en el estado.
+    \item \textit{The Timer Interrupt \texttt{(INT 8)}}: La tarjeta madre contiene un chip temporizador con tres canales, uno de los caules genera interrupciones cada 55 msec.
+    \item \textit{The Keyboard Interrupt \texttt{(INT 9)}}: genera dos interrupciones en cada pulsación de tecla: una cuando se presiona y otra cuando se libera.
+    \item \textit{The Serial Port Interrupts \texttt{(INT 0Bh} and \texttt{INT 0Ch)}}: el chip de comunicaciones seriales genera una interrupción si: un caracter arriba a la línea serial, si finaliza la comunicación, si ocurre un error o si hay un cambio en el estado.
     \item \textit{The Parallel Port Interrupts \texttt{(INT 0Dh} and \texttt{INT 0Fh)}}: un enigma.
-    \item \textit{The Diskette and Hard Drive Interrups \texttt{(INT 0Eh} and \texttt{INT 76h}}: se genera cuando una unidad de \textit{floppy} o de disco duro completa una tarea.
-    \item \textit{The Real-Time Clock Interrup \texttt{(INT 70h)}}: temporizador capaz de generar una interrupción cada 1 msec.
-    \item \textit{The FPU Interrup \texttt(INT 75h)}: cuando ocurre una excepción de punto flotante.
-    \item \textit{Nonmaskable Interrups \texttt{(INT 2)}}
-    \item \textit{Other Interrups}
+    \item \textit{The Diskette and Hard Drive Interrupts \texttt{(INT 0Eh} and \texttt{INT 76h}}: se genera cuando una unidad de \textit{floppy} o de disco duro completa una tarea.
+    \item \textit{The Real-Time Clock Interrupt \texttt{(INT 70h)}}: temporizador capaz de generar una interrupción cada 1 msec.
+    \item \textit{The FPU Interrupt \texttt(INT 75h)}: cuando ocurre una excepción de punto flotante.
+    \item \textit{Nonmaskable Interrupts \texttt{(INT 2)}}
+    \item \textit{Other Interrupts}
 \end{enumerate}
 
-\paragraph{\textnormal{\textbf{Chaining Interrup Service Routines}}}
+\paragraph{\textnormal{\textbf{Chaining Interrupt Service Routines}}}
 
 \paragraph{\textnormal{\textbf{Reentrancy Problems}}}
 
-\paragraph{\textnormal{\textbf{The Efficiency of an Interrup Driven System}}}
+\paragraph{\textnormal{\textbf{The Efficiency of an Interrupt Driven System}}}
 
-\paragraph{Interrup Driven I/O vs. Polling}
+\paragraph{Interrupt Driven I/O vs. Polling}
 
-\paragraph{Interrup Service Time}
+\paragraph{Interrupt Service Time}
 
-\paragraph{Interrup Latency}
+\paragraph{Interrupt Latency}
 
-\paragraph{Prioritized Interrups}
+\paragraph{Prioritized Interrupts}
 
 \paragraph{Debugging ISRs}
 
