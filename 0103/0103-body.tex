@@ -1,33 +1,38 @@
 El concepto de interrupción se ha expandido a través de los años. Diferentes fabricantes usan términos como \textit{exceptions, faults, aborts \textnormal{y} interrups} para describir este comportamiento. No hay un claro concenso ni un significado exacto.
+Una trampa (\textit{trap}) denota una transferencia de control iniciada y esperada de un programador hacia una rutina de manejo (\textit{handler routine}) en particular. Algunos textos se refieren a ellos como interrupciones de software. Las trampas son incondicionales, esto es, que cuando se ejecuta una instrucción \texttt{int}, el control siempre se transfiere al procedimiento asociado con la trampa. Dado que las trampas se ejecutan de modo explicíto, es fácil determinar exactamente cuales instrucciones van a invocar a una trampa en un programa. Una excepción es una trampa que se genera automáticamente(no se solicita). No hay una instrucción específica asociada para las excepciones. Una excepción ocurre en respuesta a algun comportamiente degenerativo en la ejecución normal de un programa. Cuando se presenta una excepción la CPU suspende la ejecución de la instrucción actual y transfiere el control a una rutina de manejo de excepción, la cuál decide qué hacer. Interrupciones de \textit{hardware} \textit{(hardware interrups)}, son interrupciones del control del programa a partir de eventos de \textit{hardware} externo que le informa al CPU que necesita atención. El CPU interrumpe la ejecución del programa actual, atiende el dispositivo y luego retorna el control de vuelta al programa. Una rutina de servicio de interrupción (\textit{interrup service routine -- ISR}) es un procedimiento escrito específicamente para manejar la trampa, excepción o interrupción.
 
 \paragraph{\textnormal{\textbf{80x86 Interrup Structure and Interrup Services Routines(ISRs)}}}
+El chip de la 80x86 permite hasta 256 interrupciones vectorizadas: 256 fuentes diferentes para una interrupción en donde la 80x86 llamará directamente a la rutina sin procesamientos intermedios. Las interrupciones no-vectorizadas transfieren el control a un único ISR independientemente de la fuente de la interrupción. La 80x86 provee una tabla de interrupciones de 256 entradas iniciando en la dirección 0:0 en memoria. Esta es una tabla de 1K que contiene 256 entradas de 4 bytes. Cada entrada en esta tabla contiene una dirección que apunta al ISR en memoria (0:0, 0:4, 0:8, etc). Las excepciones y las interrupciones de \textit{hardware} tiene una reestricción: tienen que preservar el estado del CPU, en particular tienen que preservar todos los registros que modifica.
 
 \paragraph{\textnormal{\textbf{Traps}}}
+Una trampa es una interrupción invocada por \textit{software} (por medio de \texttt{int} \textit{n}). Su propósito principal es el de proveer una subrutina fija la cual varios programas pueden llamar sin tener la necesidad de saber la dirección real en donde se ejecuta (MS-DOS se puede ejecutar con \texttt{int 21h}). Dicha instrucción transfiere el control al ISR cuya entrada aparezca en la posición enésima en la tabla de interrupciones. 
 
 \paragraph{\textnormal{\textbf{Exceptions}}}
+Las excepciones ``son lanzadas'' cuando una condición anormal ocurre durante la ejecución. Aunque los manejadores de excepciones son definidos por el usuario, la 80x86 define las excepciones que pueden ocurrir, también asigna un número fijo de interrupción a cada excepción.
 
 \begin{enumerate}
-    \item \textit{Divide Error Exception \texttt{(INT 0)}}
-    \item \textit{Single Step (Trace) Exception \texttt{(INT 1)}}
-    \item \textit{Breakpoint Exception \texttt{(INT 3)}}
-    \item \textit{Overflow Exception \texttt{(INT 4/INTO)}}
-    \item \textit{Bounds Exception \texttt{(INT 5/BOUND)}}
-    \item \textit{Invalid Code Exception \texttt{(INT 6)}}
-    \item \textit{Coprocessor Not Available \texttt(INT 7)}
+    \item \textit{Divide Error Exception \texttt{(INT 0)}}: cuando se intenta dividir un valor por cero o cuando el cociente no cabe en el registro destino cuando se usan las instrucciones \texttt{div \textnormal{o} idiv}.
+    \item \textit{Single Step (Trace) Exception \texttt{(INT 1)}}: ocurre luego de cada instrucción si el \textit{bit} de \textit{trace} en el registro de \texttt{FLAGS} es igual a uno. Varios programas lo utilizan esta bandera para poder seguir la ejecución de un programa.
+    \item \textit{Breakpoint Exception \texttt{(INT 3)}}: es una trampa no una excepción. Ocurre cuando el CPU ejecuta la instrucción \texttt{int 3}.
+    \item \textit{Overflow Exception \texttt{(INT 4/INTO)}}: técnicamente una trampa. Solamente se lanza esta excepción cuando se ejecuta la instrucción \texttt{into} y la bandera de \textit{overflow} está seleccionada.
+    \item \textit{Bounds Exception \texttt{(INT 5/BOUND)}}: si un registro específico está fuera de sus límites especificados, la instrucción \texttt{bound} actúa como una instrucción \texttt{int 5}. 
+    \item \textit{Invalid Opcode Exception \texttt{(INT 6)}}: se lanza si se intenta ejecutar un código de operación (\textit{opcode}) el cual no corresponde a una instrucción 80x86 válida. 
+    \item \textit{Coprocessor Not Available \texttt{(INT 7)}}: se lanza si se intenta ejecutar una instrucción de un coprocesador no instalado (por ejemplo ejecutar una instrucción de punto flotante sin tener el coprocesador instalado). 
 \end{enumerate}
 
 \paragraph{\textnormal{\textbf{Hardware Interrupts}}}
+Las interrupciones vienen de varias fuentes: teclado, puertos seriales y paralelos, rejoles, unidades de disco y otros dispositivos periféricos. Estos dispositivos se conectan a un controlador de interrupciones programable (PIC), el Intel 8259A  que prioriza las interrupciones las interfaces con el CPU. La 80x86 provee hasta 15 interrupciones vectorizadas usando un par de PICs (maestro-esclavo). El PIC también permite enmascarar dispositivos que pueden interrumpir el sistema. 
 
-\paragraph{The 8559A Programable Interrup Controller (PIC)}
+%\paragraph{The 8559A Programable Interrup Controller (PIC)}
 
 \begin{enumerate}
-    \item \textit{The Timer Interrup \texttt{(INT 8)}}
-    \item \textit{The Keyboard Interrup \texttt{(INT 9)}}
-    \item \textit{The Serial Port Interrups \texttt{(INT 0Bh} and \texttt{INT 0Ch)}}
-    \item \textit{The Parallel Port Interrupts \texttt{(INT 0Dh} and \texttt{INT 0Fh)}}
-    \item \textit{The Diskett and Hard Drive Interrups \texttt{(INT 0Eh} and \texttt{INT 76h}}
-    \item \textit{The Real-Time Clock Interrup \texttt{(INT 70h)}}
-    \item \textit{The FPU Interrup \texttt(INT 75h)}
+    \item \textit{The Timer Interrup \texttt{(INT 8)}}: La tarjeta madre contiene un chip temporizador con tres canales, uno de los caules genera interrupciones cada 55 msec.
+    \item \textit{The Keyboard Interrup \texttt{(INT 9)}}: genera dos interrupciones en cada pulsación de tecla: una cuando se presiona y otra cuando se libera.
+    \item \textit{The Serial Port Interrups \texttt{(INT 0Bh} and \texttt{INT 0Ch)}}: el chip de comunicaciones seriales genera una interrupción si: un caracter arriba a la línea serial, si finaliza la comunicación, si ocurre un error o si hay un cambio en el estado.
+    \item \textit{The Parallel Port Interrupts \texttt{(INT 0Dh} and \texttt{INT 0Fh)}}: un enigma.
+    \item \textit{The Diskette and Hard Drive Interrups \texttt{(INT 0Eh} and \texttt{INT 76h}}: se genera cuando una unidad de \textit{floppy} o de disco duro completa una tarea.
+    \item \textit{The Real-Time Clock Interrup \texttt{(INT 70h)}}: temporizador capaz de generar una interrupción cada 1 msec.
+    \item \textit{The FPU Interrup \texttt(INT 75h)}: cuando ocurre una excepción de punto flotante.
     \item \textit{Nonmaskable Interrups \texttt{(INT 2)}}
     \item \textit{Other Interrups}
 \end{enumerate}
@@ -46,7 +51,7 @@ El concepto de interrupción se ha expandido a través de los años. Diferentes 
 
 \paragraph{Prioritized Interrups}
 
-\paragraph{Debuggin ISRs}
+\paragraph{Debugging ISRs}
 
 \section{¿Cuál es el problema que plantea el \textit{paper}?}
 
