@@ -2,7 +2,7 @@ El concepto de interrupción se ha expandido a través de los años. Diferentes 
 Una trampa (\textit{trap}) denota una transferencia de control iniciada y esperada de un programador hacia una rutina de manejo (\textit{handler routine}) en particular. Algunos textos se refieren a ellos como interrupciones de software. Las trampas son incondicionales, esto es, que cuando se ejecuta una instrucción \texttt{int}, el control siempre se transfiere al procedimiento asociado con la trampa. Dado que las trampas se ejecutan de modo explicíto, es fácil determinar exactamente cuales instrucciones van a invocar a una trampa en un programa. Una excepción es una trampa que se genera automáticamente(no se solicita). No hay una instrucción específica asociada para las excepciones. Una excepción ocurre en respuesta a algun comportamiente degenerativo en la ejecución normal de un programa. Cuando se presenta una excepción la CPU suspende la ejecución de la instrucción actual y transfiere el control a una rutina de manejo de excepción, la cuál decide qué hacer. Interrupciones de \textit{hardware} \textit{(hardware interrups)}, son interrupciones del control del programa a partir de eventos de \textit{hardware} externo que le informa al CPU que necesita atención. El CPU interrumpe la ejecución del programa actual, atiende el dispositivo y luego retorna el control de vuelta al programa. Una rutina de servicio de interrupción (\textit{interrupt service routine -- ISR}) es un procedimiento escrito específicamente para manejar la trampa, excepción o interrupción.
 
 \paragraph{\textnormal{\textbf{80x86 Interrupt Structure and Interrupt Services Routines(ISRs)}}}
-El chip de la 80x86 permite hasta 256 interrupciones vectorizadas: 256 fuentes diferentes para una interrupción en donde la 80x86 llamará directamente a la rutina sin procesamientos intermedios. Las interrupciones no-vectorizadas transfieren el control a un único ISR independientemente de la fuente de la interrupción. La 80x86 provee una tabla de interrupciones de 256 entradas iniciando en la dirección 0:0 en memoria. Esta es una tabla de 1K que contiene 256 entradas de 4 bytes. Cada entrada en esta tabla contiene una dirección que apunta al ISR en memoria (0:0, 0:4, 0:8, etc). Las excepciones y las interrupciones de \textit{hardware} tiene una reestricción: tienen que preservar el estado del CPU, en particular tienen que preservar todos los registros que modifica.
+El chip de la 80x86 permite hasta 256 interrupciones vectorizadas: 256 fuentes diferentes para una interrupción en donde la 80x86 llamará directamente a la rutina sin procesamientos intermedios. Las interrupciones no-vectorizadas transfieren el control a un único ISR independientemente de la fuente de la interrupción. La 80x86 provee una tabla de vectores de interrupción de 256 entradas iniciando en la dirección 0:0 en memoria. Esta es una tabla de 1K que contiene 256 entradas de 4 bytes. Cada entrada en esta tabla contiene una dirección que apunta al ISR en memoria (0:0, 0:4, 0:8, etc). Las excepciones y las interrupciones de \textit{hardware} tiene una reestricción: tienen que preservar el estado del CPU, en particular tienen que preservar todos los registros que modifica.
 
 \paragraph{\textnormal{\textbf{Traps}}}
 Una trampa es una interrupción invocada por \textit{software} (por medio de \texttt{int} \textit{n}). Su propósito principal es el de proveer una subrutina fija la cual varios programas pueden llamar sin tener la necesidad de saber la dirección real en donde se ejecuta (MS-DOS se puede ejecutar con \texttt{int 21h}). Dicha instrucción transfiere el control al ISR cuya entrada aparezca en la posición enésima en la tabla de interrupciones. 
@@ -38,27 +38,72 @@ Las interrupciones vienen de varias fuentes: teclado, puertos seriales y paralel
 \end{enumerate}
 
 \paragraph{\textnormal{\textbf{Chaining Interrupt Service Routines}}}
+Existen dos variedades de ISRs:
+\begin{enumerate}
+    \item Los que necesitan acceso exclusivo a un vector de interrupciones (ISRs de manejo de errores: división por cero, \textit{overflow})
+    \item Los que tienen que compartir un vector de interrupciones con varios otros ISRs (Ej: ISRs para relojes en tiempo real, teclado. Se pueden encontrar varios de estos ISRs en memoria compartiendo cada una de estas interrupciones)
+\end{enumerate}
+Los ISRs escritos por los programadores pueden necesitar coexistir con otros ISRs en memoria. No se pouede simplemente reemplaczar un vector de interrupciones con la dirección de un ISR y hacer que este ISR tome el control a partir de ese momento. Con frecuencia, se necesitará crear una cadena de interrupciones (\textit{interrupt chain}) e invocar ISRs previos en la cadena una vez que se haya terminado con la programación del ISR.
 
 \paragraph{\textnormal{\textbf{Reentrancy Problems}}}
+¿Qué pasaría si se habilitan interrupciones mientras se está en un ISR y una segunda interrupción llega también desde del mismo dispositivo? Esto podría interrumpir al ISR y entonces re-entrar (\textit{reenter}) en el ISR desde el principio. Una aplicación que puede manejar apropiadamente esta situación se dice que es ``re-entrante'' (\textit{reentrant}). Los segmentos de código que no operan apropiadamente cuando re-entran son ``no re-entrantes''. Un programa no debería re-entrar mientras se ejecutan porciones de código que se consideren críticas, esto es regiones en donde se están modicando registros que podrían ser afectados si se interrumpiera el ISR y se fuera al inicio otra vez.
+
 
 \paragraph{\textnormal{\textbf{The Efficiency of an Interrupt Driven System}}}
 
 \paragraph{Interrupt Driven I/O vs. Polling}
+El propósito de un sistema orientado a interrupciones es el de permitir al CPU a continuar procesando instrucciones mientras alguna actividad de entrada/salida ocurre. Esto es lo opuesto a un sistema de consulta constante (\textit{polling}) en donde en CPU está constantemente probando un dispositivo de entrada/salida para ver si una operación de entrada/salida está completa. En un sistema orientado a interrupciones, el CPU hace su trabajo y el dispositivo de entrada/salida interrumpe cuando necesita ser atentido. Esto es generalmente más eficiente. 
 
 \paragraph{Interrupt Service Time}
+Dos factores controlan el impacto de un ISR en una computadora:
+\begin{enumerate}
+    \item Frecuencia de interrupciones: cuántas veces ocurre una interrupción por segundo. Varia dependiendo de la fuenta de la interrupción: chip temporizador 18 veces por segundo, puerto serial 100 veces por segundo, teclado 20 veces por segundo.
+    \item Tiempo de servicio de una interrupción: cuánto tiempo le toma a un ISR atender una interrupción. Depende del número de instrucciones que un ISR debe ejecutar. También depende del CPU y de la frecuencia del reloj. La cantidad de tiempo que le toma a una rutina de ISR manejar una interrupción multiplicado por la frecuencia de la interrupción, determina el impacto de la interrupción en el sistema.
+\end{enumerate}
 
 \paragraph{Interrupt Latency}
+Es el tiempo que hay entre el punto en donde el dispotivo envía un mensaje de que necesita ser atendido y el punto donde el ISR provee el servicio necesario. El PIC 8259 necesita enviar una señal al CPU, el CPU necesita interrumpir el programa actual, poner los \textit{flags} y direcciones de retorno en la pila, obtener la dirección del ISR y transferir el control al ISR. El ISR podría necesitar poner varios registros, configurar variables, revisar el estado del dispositivo para determinar la fuente de la interrupción, entre otras cosas. Además, pueden haber otros ISRs encadenados dentro del vector de interrupciones que se van a ejecutar antes de transferir el control a un ISR en particular. En teoría un ISR que tome menos de 10 segundos se considera bueno.
 
 \paragraph{Prioritized Interrupts}
+¿Cuál interrupción debe de ser atendida primero por el CPU? ¿Cuál es más importante? El PIC 8259 no lleva un registro de cuál interrupción sucedió primero. El PIC 8259 provee varios esquemas de priorización pero es el BIOS el que se encarga de inicializar el chip con prioridades fijas: el dispositivo en \texttt{IRQ 0} (el temporizador) tiene la más alta prioridad y el dispositivo en \texttt{IRQ 7} la más baja. La interrupción de no-enmascaramiento tiene prioridad más alta de todas en el PIC 8259.
 
 \paragraph{Debugging ISRs}
+Los ISRs son dificiles de \textit{debuggear}. ISRs errantes pueden modificar valores que el programa principal u otro programa usa. También, la mayoría de los \textit{debuggers} tiene problemas a la hora de intentar fijar un \textit{breakpoint} dentro de un ISR porque ellos no son re-entrantes. De tal forma que cuando se fija un \textit{breakpoint} dentro de un ISR que tiene interrupciones de BIOS o DOS y el \textit{debugger} llama al BIOS o al DOS, el sistema podrían caerse por problema de re-entrada.
 
 \section{¿Cuál es el problema que plantea el \textit{paper}?}
+El cómo manejar escenarios ``excepcionales'' que se dan durante la ejecución de un programa en la 80x86. Estos escenarios se pueden dar a raíz de errores de la programación, pueden ser inducidos por el programador o bien se dan cuando un dispositivo de entrada/salida necesita ser atendido y el CPU necesita interrumpir su labor actual con el fin de brindarle servicio.
 
 \section{¿Por qué el problema es interesante o importante?}
+Porque mientras una computadora se encuentra en funcionamiento, estos escenarios excepcionales se dan más bien con muchísima frecuencia, los programas fallan y se necesita contar con mecanismos para manejar estos fallos y no causar efectos secundarios en la actividad del CPU, los registros, en la memoria o en otros programas. Al mismo tiempo, el computador necesita interactuar con dispositivos de entrada/salida y cuando esto se hace, se necesita proveer atención a los mismo porque de lo contrario toda la actividad que lleven a cabo sería ignorada.  
 
-\section{¿Qué otras soluciones se han intentado para resolver este problema?}     
+\section{¿Qué otras soluciones se han intentado para resolver este problema?}
+Diferentes fabricantes utilizan diferentes instrucciones e implementaciones para el manejo de interrupciones. Se menciona que en la 80x86 existen tres tipos pero por ejemplo en la serie Motorola 68000, la competidora de la época de la 80x86, existen otros tipos y otras implementaciones. En \cite{antic} se puede encontrar una reseña sobre excepciones e interrupciones en la 68000.
+
+Un enfoque alternativo al uso de interrupciones es por medio \textit{polling} en donde CPU esta constantemente consultando si una tarea se ha completado en un dispositivo de entrada/salida. Si los escenarios excepcionales fuera implementados por medio de \textit{polling} se corre con el riesgo de que el CPU no tenga ciclos para realizar otro tipo de procesamiento. Se da un ejemplo en donde si se llegara a implementar la comunicación serial por medio de \textit{polling}, entonces el CPU deberá de pasar todo su tiempo verificando si un caracter ha arribado.
 
 \section{¿Cuál es la solución propuesta por los autores?}
+El principal mecanismo para el manejo de excepciones trampas e interrupciones en la 80x86 es por medio de: 
+\begin{itemize}
+    \item 256 interrupciones vectorizadas, las cuales llaman directamente a una rutina de interrupción.
+    \item Interrupciones no vectorizadas, entregan el control a un servicio de rutinas para interrupciones (ISR). La 80x86 provee una tabla de vectores de interrupción de 256 entradas iniciando en la dirección 0:0 en memoria. Esta es una tabla de 1K que contiene 256 entradas de 4 bytes. Cada entrada en esta tabla contiene una dirección que apunta al ISR en memoria. Cuando ocurre una interrupción:
+    \begin{enumerate}
+        \item El CPU pone el registro de \texttt{FLAGS} en la pila
+        \item El CPU pone un \textit{far return address (segment/offset)} en la pila \footnote{\textit{Far return: un retorno a una llamada de un procedimiento localizado en un segmento diferente que el segmento del código actual.}}  
+        \item El CPU determina la causa de la interrupción
+        \item El CPU transfiere el control a la rutina especificada por la tabla de vectores de  interrupción
+    \end{enumerate}
+\end{itemize}
+Luego de los pasos anteriores el ISR toma el control y luego lo retorna por medio la instrucción \texttt{iret}.
 
 \section{¿Qué tan exitosa es esta solución?}
+A pesar de la complejidad que las interrupciones introducen en un sistema (por ejemplo en \textit{debugging}), los sistemas orientados a interrupciones son usualmente superiores en eficiencia aunque esto no siempre es el caso. Para muchos otros sistemas, métodos alternativos proveen mejor rendimiento.
+
+
+
+
+\bibliographystyle{ACM-Reference-Format}
+\begin{thebibliography}{9}
+
+\bibitem[ANTIC]{antic} Actic Magazine, Classic Computer Magazine Archive. \emph{68000 EXCEPTIONS \& INTERRUPTS: Part II: Into the ST}. Vol 5, No 2. June 1986. Disponible en \url{http://www.atarimagazines.com/v5n2/ExceptionsInterrupts.html}
+
+\end{thebibliography}
