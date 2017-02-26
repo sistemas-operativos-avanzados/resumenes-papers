@@ -1,0 +1,14 @@
+\textit{Lottery scheduling} es un mecanismo aleatorio de asignación de recursos. Los permisos de los recursos se representan por medio de tiquetes de loteria(\textit{lottery tickets}). Cada asignación se determina por medio de la realización de una lotería: el recurso de otorga al cliente con el tiquete ganador. Esto permite la asignación efectiva de los recursos a los recursos competidores en proporción al número de tiquetes que tengan. \underline{\textit{Resource Rights:}} los tiquetes de lotería encapsulan los permisos de los recursos que son (1) Abstractos porque cuantifican los permisos de los recursos independientemente de los detalles de la máquina. (2) Relativos porque la fracción de un recurso que ellos representan varía dinámicamente en proporción a la conexión para ese recurso. (3) Uniformes porque los permisos para recursos heterogéneos pueden ser representados de forma homogénea como tiquetes. \textbf{Lotteries:} \textit{Scheduling} por lotería es probabilísticamente justo. La asignación esperada de recursos a los clientes es proporcional al número de tiquetes que tienen. Dado que el algoritmo de \textit{scheduling} es aleatorio, las proporciones asignadas reales no son garantizadas a coincidir las proporciones esperadas. El número de loterías ganadas por un cliente tiene un distribución binomial. La probabilidad $p$ de que un cliente que tiene $t$ tiquetes vaya a ganar un lotería de $T$ tiquetes es $p = t/T$. Luego de $n$ loterías idénticas, el número esperado de ganes $w$ es $E[w] = np$, con varianza $\sigma^2_{w} = np(1-p)$. El coeficiente de variación para la proporción observada de ganes es $\sigma_w/E[w] = \sqrt{(1-p)/np}$. De esta forma, el \textit{throughput} de un cliente es proporcional a su asignación de tiquete, con precisión de que mejora con $\sqrt{n}$. El número esperado de loterías $n$ que un cliente tiene que esperar antes de su primer gane es $E[n] = 1/p$ con varianza $\sigma^2_{n} = (1-p)/p^2$. De esta forma, el tiempo de repuesta promedio de un cliente es inversamente proporcional a su asignación de tiquete.
+
+\paragraph{\textnormal{\textbf{Modular Resource Management}}}
+Técnicas para implementar políticas gestión de recursos con \textit{lottery tickets:} \underline{\textit{Ticket Transfers:}} son transferencias explícitas de tiquetes de un cliente a otro. Pueden ser usados en cualquier situación donde un cliente bloquee debido a alguna dependencia. Los clientes también tienen la habilidad de dividir transferencia de tiquetes a través de múltiples servidores en donde ellos pueden estar esperando. \underline{\textit{Ticket Inflation:}}
+
+\section{¿Cuál es el problema que plantea el \textit{paper}?}
+
+\section{¿Por qué el problema es interesante o importante?} 
+
+\section{¿Qué otras soluciones se han intentado para resolver este problema?}
+     
+\section{¿Cuál es la solución propuesta por los autores?}
+
+\section{¿Qué tan exitosa es esta solución?} 
