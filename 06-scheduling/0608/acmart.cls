@@ -430,8 +430,8 @@ Computing Machinery]
 \or % acmlarge
    \geometry{twoside=true, head=1pc, foot=2pc,
      paperwidth=8.5in, paperheight=11in,
-     includeheadfoot,
-     top=78pt, bottom=114pt, inner=81pt, outer=81pt
+%     includeheadfoot,
+     top=78pt, bottom=114pt, inner=81pt, outer=70pt
      }%
 \or % acmtog
    \geometry{twoside=true, head=1pc, foot=2pc,
@@ -1950,7 +1950,7 @@ Computing Machinery]
     \@tempdima=\@folio@ht\relax
     \multiply\@tempdima by \the\@tempcnta\relax
     \advance\@tempdima by -\@folio@voffset\relax
-    \begin{picture}(0,0)
+    \begin{picture}(40,33)
     \makebox[\z@]{\raisebox{-\@tempdima}{%
         \rlap{%
           \raisebox{-0.45\@folio@ht}[\z@][\z@]{%
