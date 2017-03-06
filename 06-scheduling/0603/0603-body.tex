@@ -38,12 +38,19 @@ David también dijo que algunos de los héroes reales del problema fueron alguna
 
 
 \section{¿Cuál es el problema que plantea el \textit{paper}?}
+Un problema de inversión de prioridades en las tareas del sistema embebido de tiempo real VxWorks de la nave espacial Pathfinder.
 
 \section{¿Por qué el problema es interesante o importante?}
+Porque a partir de esta conducta, en donde a las tareas de mayor prioridad se les dejaba en espera por tiempos ilimitados causando bloqueos, la nave especial empezó a experimentar un funcionamiento errático como reinicios y pérdidas de información. Esto puso en riesgo toda la misión Mars Pathfinder.
 
 \section{¿Qué otras soluciones se han intentado para resolver este problema?}
+A pesar de que hubo una confesión de uno de los ingenieros del JPL acerca de que estos reinicios en el sistema se produjeron un par de veces antes, al problema no se le dió mayor importancia.
+
+También se comenta que una solución al problema de inversión de propiedades fue propuesta por Lui Sha, John Lehoczky y Raj Rajkumar.
+
      
 \section{¿Cuál es la solución propuesta por los autores?}
+La solución por parte de los ingenieros del JPL fue la de poner el parámetro que indicaba si debía de realizarse herencia de prioridad de VxWorks en \texttt{on}.
 
 \section{¿Qué tan exitosa es esta solución?} 
 No ocurrieron más reinicios en el sistema.
