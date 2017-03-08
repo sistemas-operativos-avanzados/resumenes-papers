@@ -1,0 +1,127 @@
+A pesar de su increíble complejidad, los sistemas computacionales existen y continúan evolucionando porque están diseñados como jerarquías de interfaces bien definidas que separan niveles de abstracción. Usando interfaces bien definidas se facilita el desarrollo de subsistemas independientes en grupos de software y hardware. Las abstracciones simplificadas esconden detalles de implementación de bajo nivel y, por lo tanto, reduce la complejidad del diseño de procesos. La arquitectura del conjunto de instrucciones de una computadora (\textit{instruction set architecture} - ISA) ejemplifica las ventajas de interfaces bien definidas al permitirle a los desarrolladores interacturas con subsistemas de la computadora no solamente entre organizaciones sino también en diferentes momentos en el tiempo. Por ejemplo, los diseñadores de Intel y AMD desarrollan microprocesadores que implementan el conjunto de instrucciones de Intel IA-32(x86), mientras que los desarrolladores de Microsoft escriben software que se compila en el mismo conjunto de instrucciones. Dado que ambos equipos satisfacen la especificación ISA, se puede esperar que el software ejecute correctamente en cualquier PC construida con un microprocesador IA-32.
+
+\paragraph{\textnormal{\textbf{Virtual Machines (VMs)}}}
+El concepto de virtualización puede ser aplicado no solo a subsistemas tales como el sistema de disco sino también a la máquina entera. Para implementar una máquina virtual, los desarrolladores agregan una capa de software a una máquina real para soportar una arquitectura deseada. Al hacer esto, una VM puede eludir las restricciones de compabilitidad con la máquina real y los recursos de hardware.
+
+\paragraph{\textnormal{\textbf{Architected Interfaces}}}
+Debido a que las implementaciones de VMs dependen de interfaces de arquitectura, una consideración importante a la hora de construir una VM is la fidelidad con la que se implementan estas interfaces. \underline{\textit{Arquitectura:}} se refiere a la especificación formal de una interface en un sistema, incluyendo el comportamiento lógico de recursos gestionados a través de esa inteface. \underline{\textit{Implementación:}} describe la realización de una arquitectura. Los niveles de abstracción corresponden a capas de la implementación, ya sea en hardware o software, cada una asociada con su propia interface o arquitectura. \underline{\textit{Instruction set architecture:}} La ISA marca la división entre el hardware y el software, y consiste de: (1) \emph{User ISA:} incluye aquellos aspectos visibles a un programa de aplicación.(2) \emph{System ISA:} un superconjunto de el \emph{user ISA} e incluye aquellos aspectos visibles solo al software del sistema operativo(SO) responsable for gestionar los recursos de hardware. \underline{\textit{Application binary interface (ABI):}} le provee a un programa el acceso a los recursos de hardware y a los servicios disponibles a través del \emph{user ISA } y la interface de llamados al sistema. La ABI no incluye instrucciones del sistema, en su lugar todos los programas de aplicación interactúan con los recursos de hardware indirectamente al invocar los servicios del SO a través de la interfaz de llamados al sistema. \underline{\textit{Applicacion programming interface (API):}} le provee a un programa accesso a los recursos de hardware y a los servicios disponibles a través del sistema a través del \emph{user ISA} complementado con llamadas de lenguaje de alto nivel (HLL - \textit{high-level language library calls}). Cualquier llamada al sistema de realiza usualmente a través de librerías. El usar un API permite a un software de aplicación ser portado fácilmente, a través de recompilación, a otros sistemas que soportan la misma API.
+
+\paragraph{\textnormal{\textbf{Process and system VMs}}}
+\underline{Concepto de máquina:} (1) Desde la perspectiva de un proceso ejecutando un programa de usuario: la máquina consiste de un espacio de direcciones de memoria lógica asignado al proceso junto con instrucciones de nivel de usuario y registros que permiten la ejecución del código que le pertenece a ese proceso. La entrada/salida(I/O) de la máquina es visible solamente a través del SO, y la única forma en la que el proceso puede interactuar con el I/O del sistema es por medio de llamados al sistema del SO. De esta forma la ABI define una máquina vista como un proceso. De forma similar, el API específica las características de la máquina a través de una aplicación de programa HLL. (2) Desde la perspectiva del SO y las aplicaciones que soporta: la máquina entera corre en la máquina subyacente. Un sistema es un ambiente completo de ejecución que puede soportar numerosos procesos simultaneamente. Esos procesos comparten un sistema de archivos y otros recursos de I/O. El sistema asigna memoria real y recursos de I/O a los procesos y permite a los procesos interactura entre sí. Desde el punto de vista del sistema, el hardware subyacente define la máquina. Es el ISA el que provee la interface entre el sistema y la máquina. \underline{\textit{Process VM:}} una plataforma virtual que se ejecuta como un proceso individual. Este tipo de VM existe solamente para soportar el proceso. Se crea cuando el proceso se crea y termina cuando el mismo termina. \underline{\textit{System VM:}} provee un ambiente completo y persistente qeu soporta un SO junto con sus procesos de usuario. Como SO invitado(\emph{guest}) provee acceso a recursos de hardware virtual, incluyendo red, I/O y quizás interfaz gráfica junto con procesador y memoria. El procesos o sistema que corre en una VM es el \emph{guest}, mientras que la plataforma subyacente que soporta la VM es el anfitrión(\emph{host}). El software de virtualización que implementa un \emph{process VM} se le llama ``\emph{runtime software}''. El software de virtualización en un \emph{system VM} se le llama típicamente \emph{virtual machine monitor} (VMM) En un \emph{process VM} el software de virtualización está a nivel del ABI o API, encima de SO y el hardware. Se emulan instrucciones de nivel de usuario y llamadas al SO. En un \emph{system VM} el software de virtualización está entre el hardware de la máquina del \emph{host} y el software del \emph{guest}. La VMM emula el ISA del hardware de esta forma el software del \emph{guest} puede potencialmente ejecutar un ISA diferente al de la implementado por el \emph{host}.
+
+\paragraph{\textnormal{\textbf{Process Virtual Machines}}}
+\underline{\textit{Multiprogrammed systems:}} la mayoría de SO puede soportar varios procesos de usuario simultaneamente a través de multiprogramación lo que le da a cada proceso la ilusión de tener una máquina completa para él. \underline{\textit{Emulators and dynamic binary translators:}} dar soporte a programas compilados en un conjunto de instrucciones diferente al que ejecuta el \emph{host}. (1) Emulación por interpretación: un programa interpretador que recupera, decodifica y emula la ejecución de instrucciones individuales del \emph{guest}. Puede llegar a ser lento. (2) Emulación por traducción dinámica binaria: convierte instrucciones del \emph{guest} a instrucciones para el \emph{host} en bloques en lugar de una por una y las guarda para reutilizarlas en en caché. \underline{\textit{Same-ISA binary optimizers:}} para prevenir pérdida de rendimiento, los traductores dinámicos binarios a veces realizan optimizaciones durante la traducción. Esta característica tiene mayor aprovechamiento en VMs en las cuales el conjunto de intrucciones del \emph{guest} es el mismo que el del \emph{host}. \underline{\textit{High-level-language VMs:}} (1) \emph{Conventional platform specific compilation environment:} un \emph{compiler front end} genera primero código intermedio que es similar al código de la máquina pero más abstracto. Luego, un generador de código usa el código intermedio para generar un binario que contiene código máquina para la ISA y el SO especificos. Este archivo binario es distribuido y ejecutado en plataformas que soportan una combinación dada de ISA/SO. \underline{\textit{HLL VM:}} un \emph{compiler front end} genera código máquina abstracto en una ISA virtual que especifica la interfase de la VM. Este código de la ISA virtual, junto con información asociada de estructuras de datos, se distribuye para ser ejecutado en diferentes plataformas. Cada plataforma \emph{host} implementa una VM capaz de cargar y ejecutar la ISA virtual y el conjunto de librerías de rutinas especificadas por una API estandarizada. En su forma más simple, la VM contiene un intérprete. VMs más sofisticados compilan el código máquina abstracto dentro del código máquina del \emph{host} para ejecución directa en la plataforma del \emph{host}. Una ventaja de HLL VM es que el código de aplicación puede ser fácilmente portado una vez que la VM y las librerías son implementadas en una plataforma \emph{host}.
+
+\paragraph{\textnormal{\textbf{System Virtual Machines}}}
+Un \emph{system VM} provee un ambiente completo en donde un SO y muchos procesos, posiblemente pertenecientes a múltiples usuarios, pueden coexistir. Al usar \emph{system VMs}, una plataforma de hardware \emph{single-host} puede soportar múltiples sistemas operativos \emph{guest} aislados simultaneamente. Quizás la aplicación actual más importante de la tecnología de \emph{system VM} es el aislamiento que provee entre múltiples sistemas corriendo concurrentemente en la misma plataforma de hardware. Si la seguridad en un \emph{guest} se compromete o si un SO falla, el software corriendo en los otros sistemas \emph{guests} no se afecta. \underline{\textit{Classic system VMs:}} El enfoque clásico pone la VMM en el hardware y la VM por encima. La VMM corre en el modo de privilgio más alto, mientras que todos los sistemas \emph{guests} corren con privilegios reducidos de tal forma que la VMM puede interceptar y emular todas las acciones del SO \emph{guest} que normalmente accederían o manipularían recursos de hardware. \underline{\textit{Hosted VMs:}} la implementación de la VM construye software de virtualización por encima de un SO \emph{host} existente, dando como resultado un \emph{hosted VM}. Una ventaja de un \emph{hosted VM} es que el usuario lo instala como si fuera una programa de aplicación típico. Además, el software de virtualización puede confiar en el SO \emph{host} para proporcionar controladores de dispositivos y otros servicios de bajo nivel en lugar de la VMM. \underline{\textit{Whole-system VMs:}} en algunas ocasiones los sistema \emph{guest} y \emph{host} no tiene un ISA en común. \emph{Whole-system VMs} tratan con la situación en donde se virtualiza todo el software, incluyendo el SO y las aplicaciones. Debido a que los ISAs son diferentes, la VM debe emular ambos el código de la aplicación y el SO.  Un ejemplo de este tipo de VM is Virtual PC, en donde un sistema Windows corre en una plataforma Macintosh. El software de VM ejecuta como un programa de aplicación soportado por el SO \emph{host} y no usa operaciones ISA. \underline{\textit{Multiprocessor virtualization:}} se da cuando la plataforma  subyacente del \emph{host} es un multiprocesador de memoria compartida grande. Aqui, un objetivo importante es la partición de un sistema grande en múltiples sistemas multiprocesador pequeños al distribuir los recursos subyacentes de hardware del sistema grande. Con \emph{physical partitioning}, los recursos físicos que un sistema virtual usa están disjuntos de aquellos usados por otros sistemas virtuales. \emph{Physical partitioning} provee un alto grado de aislamiento, de tal forma ninguna falla de hardware o software en una partición afecta los programas en otras particiones. Con \underline{\textit{logical partitioning}}, los recursos de hardware subyacentes estan multiplexados por tiempo entre diferentes particiones, de este modo se mejora la utilización de los recursos del sistema. Sin embargo, algunos de los beneficios del aislamiento de hardware se pierden. \underline{\textit{Codesigned VMs:}} implementan ISAs nuevas y propietarias dirigidas al mejoramiento del rendimiento, eficiencia energética o ambos. El ISA del \textit{host} puede ser completamente nuevo, o puede ser una extensión de un ISA existente. Una \emph{codesigned VM} no tiene una aplicaciones ISA nativas. En su lugar, la VMM parece ser de la implementación de hardware. Su único propósito es el de emular el ISA del \emph{guest}. Para mantener esta ilusión, la VMM reside en una región de memoria reservada de todo el software convencional. Incluye un traductor binario que converte instrucciones \emph{guest} en secuencias optimizadas de instrucciones ISA de \emph{host} y las pone en el caché de la región reservada de memoria.
+
+\textbf{Virtual Machine Taxonomy}
+
+\begin{minipage}{0.5\textwidth}
+\begin{itemize}
+    \item Process VMs
+    \begin{itemize}
+        \item Same ISA
+        \begin{itemize}
+            \item Multiprogrammed systems
+            \item[] Same-ISA dynamic binary optimizers
+        \end{itemize}
+        \item Different ISA
+        \begin{itemize}
+            \item Dynamic translators
+            \begin{itemize}
+                \item[] High-level-language VMs
+            \end{itemize}
+        \end{itemize}
+    \end{itemize}
+\end{itemize}
+\end{minipage}
+\begin{minipage}{0.4\textwidth}
+\begin{itemize}
+    \item System VMs
+    \begin{itemize}
+        \item Same ISA
+        \begin{itemize}
+            \item Classic System VMs
+            \item[] Hosted VMs
+        \end{itemize}
+        \item Different ISA
+        \begin{itemize}
+            \item Whole-system VMs
+            \item[] Codesigned VMs
+        \end{itemize}
+    \end{itemize}
+\end{itemize}
+\end{minipage}
+
+
+\section{¿Cuál es el problema que plantea el \textit{paper}?}
+
+\section{¿Por qué el problema es interesante o importante?}
+
+\section{¿Qué otras soluciones se han intentado para resolver este problema?}
+     
+\section{¿Cuál es la solución propuesta por los autores?}
+
+\section{¿Qué tan exitosa es esta solución?} 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
