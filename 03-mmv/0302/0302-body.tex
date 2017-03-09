@@ -13,13 +13,28 @@ Debido a que las implementaciones de VMs dependen de interfaces de arquitectura,
 \underline{\textit{Multiprogrammed systems:}} la mayoría de SO puede soportar varios procesos de usuario simultaneamente a través de multiprogramación lo que le da a cada proceso la ilusión de tener una máquina completa para él. \underline{\textit{Emulators and dynamic binary translators:}} dar soporte a programas compilados en un conjunto de instrucciones diferente al que ejecuta el \emph{host}. (1) Emulación por interpretación: un programa interpretador que recupera, decodifica y emula la ejecución de instrucciones individuales del \emph{guest}. Puede llegar a ser lento. (2) Emulación por traducción dinámica binaria: convierte instrucciones del \emph{guest} a instrucciones para el \emph{host} en bloques en lugar de una por una y las guarda para reutilizarlas en en caché. \underline{\textit{Same-ISA binary optimizers:}} para prevenir pérdida de rendimiento, los traductores dinámicos binarios a veces realizan optimizaciones durante la traducción. Esta característica tiene mayor aprovechamiento en VMs en las cuales el conjunto de intrucciones del \emph{guest} es el mismo que el del \emph{host}. \underline{\textit{High-level-language VMs:}} (1) \emph{Conventional platform specific compilation environment:} un \emph{compiler front end} genera primero código intermedio que es similar al código de la máquina pero más abstracto. Luego, un generador de código usa el código intermedio para generar un binario que contiene código máquina para la ISA y el SO especificos. Este archivo binario es distribuido y ejecutado en plataformas que soportan una combinación dada de ISA/SO. \underline{\textit{HLL VM:}} un \emph{compiler front end} genera código máquina abstracto en una ISA virtual que especifica la interfase de la VM. Este código de la ISA virtual, junto con información asociada de estructuras de datos, se distribuye para ser ejecutado en diferentes plataformas. Cada plataforma \emph{host} implementa una VM capaz de cargar y ejecutar la ISA virtual y el conjunto de librerías de rutinas especificadas por una API estandarizada. En su forma más simple, la VM contiene un intérprete. VMs más sofisticados compilan el código máquina abstracto dentro del código máquina del \emph{host} para ejecución directa en la plataforma del \emph{host}. Una ventaja de HLL VM es que el código de aplicación puede ser fácilmente portado una vez que la VM y las librerías son implementadas en una plataforma \emph{host}.
 
 \paragraph{\textnormal{\textbf{System Virtual Machines}}}
-Un \emph{system VM} provee un ambiente completo en donde un SO y muchos procesos, posiblemente pertenecientes a múltiples usuarios, pueden coexistir. Al usar \emph{system VMs}, una plataforma de hardware \emph{single-host} puede soportar múltiples sistemas operativos \emph{guest} aislados simultaneamente. Quizás la aplicación actual más importante de la tecnología de \emph{system VM} es el aislamiento que provee entre múltiples sistemas corriendo concurrentemente en la misma plataforma de hardware. Si la seguridad en un \emph{guest} se compromete o si un SO falla, el software corriendo en los otros sistemas \emph{guests} no se afecta. \underline{\textit{Classic system VMs:}} El enfoque clásico pone la VMM en el hardware y la VM por encima. La VMM corre en el modo de privilgio más alto, mientras que todos los sistemas \emph{guests} corren con privilegios reducidos de tal forma que la VMM puede interceptar y emular todas las acciones del SO \emph{guest} que normalmente accederían o manipularían recursos de hardware. \underline{\textit{Hosted VMs:}} la implementación de la VM construye software de virtualización por encima de un SO \emph{host} existente, dando como resultado un \emph{hosted VM}. Una ventaja de un \emph{hosted VM} es que el usuario lo instala como si fuera una programa de aplicación típico. Además, el software de virtualización puede confiar en el SO \emph{host} para proporcionar controladores de dispositivos y otros servicios de bajo nivel en lugar de la VMM. \underline{\textit{Whole-system VMs:}} en algunas ocasiones los sistema \emph{guest} y \emph{host} no tiene un ISA en común. \emph{Whole-system VMs} tratan con la situación en donde se virtualiza todo el software, incluyendo el SO y las aplicaciones. Debido a que los ISAs son diferentes, la VM debe emular ambos el código de la aplicación y el SO.  Un ejemplo de este tipo de VM is Virtual PC, en donde un sistema Windows corre en una plataforma Macintosh. El software de VM ejecuta como un programa de aplicación soportado por el SO \emph{host} y no usa operaciones ISA. \underline{\textit{Multiprocessor virtualization:}} se da cuando la plataforma  subyacente del \emph{host} es un multiprocesador de memoria compartida grande. Aqui, un objetivo importante es la partición de un sistema grande en múltiples sistemas multiprocesador pequeños al distribuir los recursos subyacentes de hardware del sistema grande. Con \emph{physical partitioning}, los recursos físicos que un sistema virtual usa están disjuntos de aquellos usados por otros sistemas virtuales. \emph{Physical partitioning} provee un alto grado de aislamiento, de tal forma ninguna falla de hardware o software en una partición afecta los programas en otras particiones. Con \underline{\textit{logical partitioning}}, los recursos de hardware subyacentes estan multiplexados por tiempo entre diferentes particiones, de este modo se mejora la utilización de los recursos del sistema. Sin embargo, algunos de los beneficios del aislamiento de hardware se pierden. \underline{\textit{Codesigned VMs:}} implementan ISAs nuevas y propietarias dirigidas al mejoramiento del rendimiento, eficiencia energética o ambos. El ISA del \textit{host} puede ser completamente nuevo, o puede ser una extensión de un ISA existente. Una \emph{codesigned VM} no tiene una aplicaciones ISA nativas. En su lugar, la VMM parece ser de la implementación de hardware. Su único propósito es el de emular el ISA del \emph{guest}. Para mantener esta ilusión, la VMM reside en una región de memoria reservada de todo el software convencional. Incluye un traductor binario que converte instrucciones \emph{guest} en secuencias optimizadas de instrucciones ISA de \emph{host} y las pone en el caché de la región reservada de memoria.
+Un \emph{system VM} provee un ambiente completo en donde un SO y muchos procesos, posiblemente pertenecientes a múltiples usuarios, pueden coexistir. Al usar \emph{system VMs}, una plataforma de hardware \emph{single-host} puede soportar múltiples sistemas operativos \emph{guest} aislados simultaneamente. Quizás la aplicación actual más importante de la tecnología de \emph{system VM} es el aislamiento que provee entre múltiples sistemas corriendo concurrentemente en la misma plataforma de hardware. Si la seguridad en un \emph{guest} se compromete o si un SO falla, el software corriendo en los otros sistemas \emph{guests} no se afecta. 
+
+\underline{\textit{Classic system VMs:}} El enfoque clásico pone la VMM en el hardware y la VM por encima. La VMM corre en el modo de privilgio más alto, mientras que todos los sistemas \emph{guests} corren con privilegios reducidos de tal forma que la VMM puede interceptar y emular todas las acciones del SO \emph{guest} que normalmente accederían o manipularían recursos de hardware. 
+
+\underline{\textit{Hosted VMs:}} la implementación de la VM construye software de virtualización por encima de un SO \emph{host} existente, dando como resultado un \emph{hosted VM}. Una ventaja de un \emph{hosted VM} es que el usuario lo instala como si fuera una programa de aplicación típico. Además, el software de virtualización puede confiar en el SO \emph{host} para proporcionar controladores de dispositivos y otros servicios de bajo nivel en lugar de la VMM. 
+
+\underline{\textit{Whole-system VMs:}} en algunas ocasiones los sistema \emph{guest} y \emph{host} no tiene un ISA en común. \emph{Whole-system VMs} tratan con la situación en donde se virtualiza todo el software, incluyendo el SO y las aplicaciones. Debido a que los ISAs son diferentes, la VM debe emular ambos el código de la aplicación y el SO.  Un ejemplo de este tipo de VM is Virtual PC, en donde un sistema Windows corre en una plataforma Macintosh. El software de VM ejecuta como un programa de aplicación soportado por el SO \emph{host} y no usa operaciones ISA. 
+
+\underline{\textit{Multiprocessor virtualization:}} se da cuando la plataforma  subyacente del \emph{host} es un multiprocesador de memoria compartida grande. Aqui, un objetivo importante es la partición de un sistema grande en múltiples sistemas multiprocesador pequeños al distribuir los recursos subyacentes de hardware del sistema grande. Con \emph{physical partitioning}, los recursos físicos que un sistema virtual usa están disjuntos de aquellos usados por otros sistemas virtuales. \emph{Physical partitioning} provee un alto grado de aislamiento, de tal forma ninguna falla de hardware o software en una partición afecta los programas en otras particiones. Con 
+
+\underline{\textit{logical partitioning}}, los recursos de hardware subyacentes estan multiplexados por tiempo entre diferentes particiones, de este modo se mejora la utilización de los recursos del sistema. Sin embargo, algunos de los beneficios del aislamiento de hardware se pierden. 
+
+\underline{\textit{Codesigned VMs:}} implementan ISAs nuevas y propietarias dirigidas al mejoramiento del rendimiento, eficiencia energética o ambos. El ISA del \textit{host} puede ser completamente nuevo, o puede ser una extensión de un ISA existente. Una \emph{codesigned VM} no tiene una aplicaciones ISA nativas. En su lugar, la VMM parece ser de la implementación de hardware. Su único propósito es el de emular el ISA del \emph{guest}. Para mantener esta ilusión, la VMM reside en una región de memoria reservada de todo el software convencional. Incluye un traductor binario que converte instrucciones \emph{guest} en secuencias optimizadas de instrucciones ISA de \emph{host} y las pone en el caché de la región reservada de memoria.
+
+\vspace{0.14cm}
 
 \textbf{Virtual Machine Taxonomy}
+\vspace{0.12cm}
 
 \begin{minipage}{0.5\textwidth}
 \begin{itemize}
-    \item Process VMs
+    \item \textbf{Process VMs}
     \begin{itemize}
         \item Same ISA
         \begin{itemize}
@@ -38,7 +53,7 @@ Un \emph{system VM} provee un ambiente completo en donde un SO y muchos procesos
 \end{minipage}
 \begin{minipage}{0.4\textwidth}
 \begin{itemize}
-    \item System VMs
+    \item \textbf{System VMs}
     \begin{itemize}
         \item Same ISA
         \begin{itemize}
@@ -56,64 +71,25 @@ Un \emph{system VM} provee un ambiente completo en donde un SO y muchos procesos
 
 
 \section{¿Cuál es el problema que plantea el \textit{paper}?}
+Los sistemas computacionales existen y continuan evolucionando porque son diseñados como jerarquías con interfaces bien definidas que separan niveles de abstracción. Al utilizar estas interfaces bien definidas se facilita el desarrollo independiente de subsistemas por equipos de hardware y software. 
+
+Desafortunadamente, las interfaces bien definidas tambien tienen sus limitaciones. Subsistemas y componentes diseñados para una las especificaciones de una interfaz no van a trabajar con aquellos diseñados para otra. Por ejemplo, los programas de aplicación cuando son distribuidos como binarios compilados se atan a una ISA en específico y depende de una interface de sistema operativo específica. Esta falta de interoperatibilidad puede convertirse en algo muy restrictivo, especialmente en un mundo de computadoras en red donde es muy ventajoso mover el software tan libremente como los datos. 
 
 \section{¿Por qué el problema es interesante o importante?}
+La virtualización se ha convertido en una herramienta importante en el diseño de sistemas de computación y, las máquinas virtuales son usadas en un gran número de subdisciplinas que van desde los sistemas operativos, lenguajes de programación y arquitectura de procesadores. Al liberar a los programadores y usuarios de interfaces trandicionales y restricciones de recursos, las máquinas virtuales mejoran la interoperabilidad del software, impregnabilidad del sistema y versatibilidad de plataforma.
+
+Debido a que las máquinas virtuales son el producto de grupos diversos con objetivos diferentes, existe relativamente poca unificación de conceptos. Por esta razón es útil hacer un alto y considerar la variedad de arquitecturas de máquinas virtuales y describirlas en una forma unificada, poniendo tanto la noción de virtualización y los tipos de máquinas virtuales en perspectiva.
+
 
 \section{¿Qué otras soluciones se han intentado para resolver este problema?}
+Ambas \emph{system} y \emph{process} VMs datan de los años 60s. De acuerdo con Wikipedia\footnote{https://en.wikipedia.org/wiki/Virtual\_machine} las \emph{system VMs} crecieron a partir del tiempo compartido el cual permitía que múltiples usuarios usaran la computadora de forma concurrente: cada programa parecía tener acceso total a la máquina pero sólo un programa se ejecutaba a la vez. Esto evolucionó en máquinas virtuales: IBM M44/44X, CP-40 SIMMON. La primera arquitectura de VM disponible fue la CP-67/CMS. Las \emph{process VMs} surgen originalmente como plataformas abstractas para lenguaje intermedio usado como una interpretación intermedia de un programa por el compilador. Los primeros ejemplos datan alreadedor de 1966. 
      
 \section{¿Cuál es la solución propuesta por los autores?}
+La virtualización provee una forma para proveer interoperabilidad y brindar solución a las restricciones de recursos e interfaces. Al virtualizar un sistema o un componente -como un procesador, memoria o un dispositivo de I/O- en un nivel de abstracción dado se mapea su interface y sus recursos visibles sobre la interface y los recursosde de un sistema real subyacente (posiblemente diferente).  Consecuentemente, el sistema real se parece a un sistema virtual differente o inclusive a múltiples sistemas virtuales.
+
 
 \section{¿Qué tan exitosa es esta solución?} 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+Las VMs son ahora ampliamente utilizadas para habilitar interoperatibilidad entre hardware, software de sistema y aplicación. Dado la gran dependencia en estándares y la consolidación que ocurre en la industria, es muy probable que cualquier ISA nuevo, SO o lenguaje de programación se llegue a basar en tecnología de VM. En el futuro, VMs deberían ser vistas como una disciplina unificada de la misma forma en la que el hardware, los SO y los lenguajes de programación son vistos hoy en día.
 
 
 
