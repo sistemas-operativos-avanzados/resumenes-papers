@@ -1,0 +1,77 @@
+Los \emph{Schedulers} en los sistemas operativos (SO) de hoy tiene el objetivo principal de mantener todos los núcleos ocupados ejecutando algún hilo(\emph{thread}). El uso de memoria \emph{on-chip} no es planificado(\emph{scheduled}) explícitamente: el uso de un thread de algún dato mueve implícitamente el dato del núcleo de caché local. Esta \emph{scheduling} implícito de memoria \emph{on-chip} a menudo trabaja bien, pero puede ser ineficiente para datos de lectura/escritura compartidos entre múltiples threads o para datos que son muy grandes para caber en el caché de un núcleo. Para datos de lectura/escritura compartidos, los mensajes de coherencia de caché pueden saturar las interconexiones del sistema para algunas cargas de trabajo. Para conjuntos de datos grandes, el riesgo es que cada dato pueda ser replicado en muchos cachés. Se propone el uso de un \emph{scheduler} que asigne objetos de datos a cachés \emph{on-chip} y migre threads entre todos los núcleos conforme van accesando los objetos, en una manera similar a los sistema NUMA que migran threads entre nodos. Esta migración puede disminuir el acceso a la memoria, debido a que lleva a los threads cerca de los datos que usan, asi como disminuir la duplicación de datos entre múltiples núcleos de caché, permitiendo que datos aún más distintos se pongan en caché. Un \emph{scheduler} que mueve operaciones a objectos es un $O^2$ \emph{scheduler}.
+
+\paragraph{\textnormal{\textbf{$O^2$ \emph{Scheduling}}}}
+Escenario: una carga de trabajo en donde cada thread busca repetidamente un archivo en un directorio seleccionado aleatoriamente. Cada directorio es un objeto y cada búsqueda es una operación.
+
+En un sistema con cuatro núcleos, un \emph{scheduler} basado en threads va a programar cada thread a un núcleo. Cada núcleo va a poner en caché directorios usados recientemente. Si el conjunto de trabajo es menor que el tamaño de un núcleo de caché, el rendimiento estará bien. Si el conjunto de trabajo es más grande que un núcleo de caché, entonces todos los threads probablemente van a pasar mucho tiempo esperando por \emph{on-chip} DRAM. Por otro lado, un $O^2$ \emph{scheduler} particionará los directorios a través de todos los cachés para tomar ventaja de la memoria total \emph{on-chip}. El $O^2$ \emph{scheduler} migrará cada búsqueda hacia el núcleo que mantiene en caché el directorio relevante. Si el conjunto de trabajo de directorios es más grande que un núcleo de caché y el costo de migración es relativamente bajo, el $O^2$ \emph{schedule} ve a proveer mejor rendimiento que el \emph{scheduler} basado en threads.
+
+\paragraph{\textnormal{\textbf{Challenges}}}
+(1) Un $O^2$ \emph{scheduler} debe balancear tanto objetos como operaciones a través de cachés y núcleos. No debería de asignar más objetos que los que quepan en el núcleo de caché o dejar algunos núcleos inactivos mientras otros están saturados. (2) El \emph{scheduler} debe entender lo suficiente acerca de la carga de trabajo para planificarla bien, tien que estar en la capacidad de identificar objetos y operaciones, encontar tamaños de objetos y estimar tiempos de ejecución de las operaciones. (3) El \emph{scheduler} debe de controlar cómo los objetos son almacenados en cachés. (4) El \emph{scheduler} necesita una forma eficiente de migrar threads.
+
+\paragraph{\textnormal{\textbf{\textsc{CoreTime}}}}
+\textsc{CoreTime} es un diseño de $O^2$ \emph{scheduler} que opera como una librería de tiempo de ejecución para programas en C. \underline{\emph{Interface:}} \textsc{CoreTime} depende de los programadores de aplicación para especificar lo que tiene que ser planificado. \textsc{CoreTime} provee dos anotaciones de código con la que los programadores marcan el inicio y el final de una operación. Toman un argumento que especifica la dirección que identifica el objeto. \texttt{cb\_start}$(o)$ realiza una búsqueda en una tabla para determinar si el objecto $o$ está planificado por un núcleo en específico. Si la tabla no contiene un núcleo para la operación $o$  se ejecuta localmente, de otra manera el thread se migra al núcleo retornado en la búsqueda. \texttt{cb\_start} añade automáticamente un objeto a la tabla si el objecto es muy costoso de recuperar(\emph{fetch}). Las anotaciones de \textsc{CoreTime} provistas por los desarrolladores ayudan a reducir el número de objetos que \textsc{CoreTime} considera para planificación. \underline{\emph{Algorithm:}} \textsc{CoreTime} usa un algoritmo voraz \emph{first fit ``cache packing''} para decidir qué núcleo asignar a un objeto. Está motivado en la observación que migrar una operación para manipular algún objeto $o$ es únicamente beneficioso cuando el costo de la migración es menor el costo de recuperar(\emph{fetching}) el objeto de la DRAM o algún caché remoto. El algoritmo \emph{cache packing} trabaja asignando cada objeto que es costoso de recuperar a un caché con espacio libre. El algoritmo se ejecuta en un tiempo $\Theta(n \log n)$, donde $n$ es el número de objetos. \emph{Cache packing} podría asignar varios objetos populares a un solo núcleo y los threads van a esperar para operar en los objetos. \underline{\emph{Runtime monitoring:}} \textsc{CoreTime} usa contadores de eventos de AMD para detectar objetos que son costosos de recuperar y que deberían ser asignados a un núcleo. Para cada objeto, \textsc{CoreTime} cuenta el número de intentos fallidos de caché que ocurren entre un para de anotaciones \textsc{CoreTime} y asumo que los fallidos son causados por la recuperación del objeto. \textsc{CoreTime} también usa contadores de eventos de hardware para detectar cuando demasiadas operaciones son asignadas a un núcleo o si demasiados objetos son asignados al caché. \textsc{CoreTime} lleva registro del número de ciclos inactivos(\emph{idle}), cargas desde la DRAM y cargas desde el caché L2 para cada núcleo. Si un núcleo está raramente inactivo o si a menudo realiza cargas de la DRAM, \textsc{CoreTime} va a mover periódicamente una porción de los objetos desde ese núcleo de caché hacia el núcleo de caché que tiene mas ciclos inactivos y que raramente realiza cargas desde el caché L2. \underline{\emph{Migration:}} Cuando un thread llama a \texttt{ct\_start}$(o)$ y $o$ se asigna a otro núcleo entonces \textsc{CoreTime} va a migar el thread. El núcleo que el thread se está ejecutando guarda el contexto del thread en un \emph{buffer} compartido, continua la ejecución de otros threads haya en su cola y establece una bandera que el núcleo destino consulta periódicamente. Cuando el núcleo destino nota una migración pendiente carga el contexto del thread y continua ejecutando. Eventaualmente el thread va a llamar a \texttt{cb\_end}, que salga el contexto del thread y establece una bandera que indica al núcleo original que la operación está completa y el thread está listo para correr en otro núcleo. \underline{\emph{Implementation:}} \textsc{CoreTime} corre en Linux pero puede ser portado a otros SO similares. \textsc{CoreTime} crea un \texttt{pthread} por núcleo, atado al núcleo con \texttt{sched\_setaffinity()}, y establece la prioridad de \emph{process scheduling} lo más alto posible usando \texttt{setpriority()} para evitar ser des-planificado por el kernel.
+
+\paragraph{\textnormal{\textbf{Preliminary Evidence}}}
+\underline{Hardware:} Sistema AMD, 4 chips Opteron quad-core de 2GHz. Cada núcleo con su propio caché L1 y L2. Los 4 chips comparten un caché L3. Latencias: L1 3 ciclos, L2 14 ciclos y L3 75 ciclos. Latencias de recuperación remotas varían de 127 a 336 ciclos para recuperar el banco DRAM más distante. El costo de migración en \textsc{CoreTime} es 2000 ciclos. \underline{\emph{Setup:}} Se midió el rendimiento de \textsc{CoreTime} cuando se aplicó al sistema de archivos usando dos directores de búsqueda de referencia. El sistema de archivos de derivaba de una implentación EFSL FAT y se modificó para usar operaciones de memoria en lugar de disco, esto para no usar caché de \emph{buffer} y para tener un mayor rendimiento en las búsquedas anidadas de nombres de archivos. Se concentró en búsqueda de directorios, añadiendo \emph{spin-locks} por directorio y anotaciones \textsc{CoreTime}. Cada directorio es un objeto \textsc{CoreTime} y cada búsqueda de nombre de archivo una operación. Las cargas de trabajo involucraban un thread en cada núcleo búscando repetidamente un archivo seleccionado aleatoriamente de un directorio seleccionado aleatoriamente. Cada directorio contenía 1000 entradas y cada entrada usaba 32 bytes de memoria. Podría esperarse que \textsc{CoreTime} mejore el rendimiento de estas cargas de trabajo cuando el conjunto total de entradas de directorios es lo suficientemente grande para no caber en un solo núcleo de caché. \underline{Resultados:} Se mide el rendimiento de la comparación del sistema de archivos cuando se selecciona aleatoriamente un nombre de archivo usando una distribución uniforme. Para tamaños de datos totales entre aproximadamente 512Kb  y 2Mb, una copia completa del conjunto total de directorios puede caber en cada uno de los los cachés L3 de los 4 chips AMD. Con y sin \textsc{CoreTime} hay buen rendimiento debido a que todos las búsquedas operan en dados de caché local. Cuando la cantidad total de datos es notablemente más grande que 2Mb, una copia completa no puede caber en cada uno de los caché L3 de los chips AMD y el rendimiento con \textsc{CoreTime} es dos o tres veces más rápido que sin \textsc{CoreTime}. \textsc{CoreTime} automáticamente asigna directorios a los cachés cuando se detectan fallos de caché durante búsquedas. Sin \textsc{CoreTime}, los núcleos tiene que leer los contenidos del directorio desde la DRAM o cachés remotos. Con \textsc{CoreTime}, no hay duplicación de datos en el cache y cada búsqueda es ejecutada en el núcleo que tiene el directorio en su caché. La cantidad toal de espacio de caché es 16Mb, entonces \textsc{CoreTime} puede evitar usar la DRAM hasta que haya más de 16Mb de datos. El rendimiento se viene abajo andate de ese punto y más data es almacendada en la L3 en lugar de la L2. \textsc{CoreTime} está en la capacidad de rebalancear directorios a través de cachés y rinde más de el doble de rápido para la mayoría de tamaños de datos que sin \textsc{CoreTime}. 
+
+\paragraph{\textnormal{\textbf{Discussion:}}}
+\underline{\emph{Future Multicores:}} se espera que \emph{multicores} futuros puedan ajustarse a problemas como: anchos de banda de memoria \emph{off-chip} elevados, alto costo para migrar un \emph{thread}, el poco tamaño agregado de memoria \emph{on-chip} y la limitada habilidad del software de controlar cachés de hardware. Esto para favorecer $O^2$ \emph{scheduling}. Además, el aumento en el número de instrucciones de CPU que le permiten al software controlar el caché es una evidencia que los fabricantes de chips reconocen la importancia de permitir al software controlar el comportamiento del caché. Estas tendencias van a dar como resultado procesadores en donde el $O^2$ \emph{scheduling} podría ser atractivo para un gran número de cargas de trabajo. Los \emph{multicores} podrían tener núcleos heterogeneos lo que puede complicar el diseño de un $O^2$ \emph{scheduler}. Los procesadores podrían no tener coherencia de caché y podrían depender del software para gestionar la colocación de los objetos. Si este fuera el caso entonces el $O^2$ \emph{scheduler} tiene que estar involucrado en esta colocación. También si mensajes activos son soportados por hardware esto podría reducir el \emph{overhead} de la migración. \underline{\emph{$O^2$ Improvements:}} El algoritimo de $O^2$ \emph{scheduling} está en fase preliminar y podría beneficiarse de \emph{object clustering:} si un thread u operación usa dos objetos simultáneamente entonces podria ser mejor poner ambos objetos en el mismo caché si es que caben. También hay algunas áreas no exploradas en el algoritmo de $O^2$ \emph{scheduler}. Por ejemplo, algunas veces es mejor replicar objetos de solo lectura y otras podría ser mejor planificar objetos distintos. Conjuntos de trabajo más grandes que el total de memoria \emph{on-chip} presentan algo interesante. En estas situaciones $O^2$ \emph{schedulers} podrían usar una política de reemplazo de caché que, por ejemplo, guarde los objetos accesados más frecuentemente \emph{on-chip} y guarde los menos accesados menos frecuentemente \emph{off-chip}. Para usar $O^2$ \emph{scheduler} como el \emph{scheduler} del sistema de por defecto, el $O^2$ \emph{scheduler} tiene que llevar registro qué procesos posee un objeto y sus operaciones. Con esta información el $O^2$ \emph{scheduler} podría implementar prioridades y justicia(\emph{fairness}). El soporte del compilador podría reducir el trabajo de los programadores y proveer al $O^2$ \emph{scheduler} con más información.
+
+
+
+\section{¿Cuál es el problema que plantea el \textit{paper}?}
+Los \emph{schedulers} tradicionales se concentran en mantener unidades de ejecución ocupadas al asignar a cada núcleo un thread para correr. Sin embargo, los \emph{schedulers} deberían de enfocarse en la alta utilización de memoria \emph{on-chip} en lugar de núcleos de ejecución para reducir el impacto de los accesos costosos a DRAM y los accesos a cachés remotos.  
+
+\section{¿Por qué el problema es interesante o importante?}
+Conforme el número de núcleos por chip crece, los ciclos de computación continuaran creciendo relativamente más abundante que el acceso a memoria \emph{off-chip}. Para lograr buen rendimiento, las aplicaciones necesitarán hacer un uso más eficiente de memoria \emph{on-chip}. Memoria \emph{on-chip} probablemente continuará llegando en la forma de muchos cachés pequeños asociados con núcleos individuales. El reto centro será administrar estos cachés para evitar accesos a memoria \emph{off-chip}
+
+\section{¿Qué otras soluciones se han intentado para resolver este problema?}
+     
+\section{¿Cuál es la solución propuesta por los autores?}
+Se argumenta que la solución requiere de un nuevo enfoque de planificación(\emph{scheduling}), uno que se concentre en assignación de objetos de datos a los núcleos de los cachés en lugar de asignar threads a los núcleos. Se propone el uso de un \emph{scheduler} que asigne objetos de datos a cachés \emph{on-chip} y migre threads entre todos los núcleos conforme van accesando los objetos, en una manera similar a los sistema NUMA que migran threads entre nodos. Esta migración puede disminuir el acceso a la memoria, debido a que lleva a los threads cerca de los datos que usan, asi como disminuir la duplicación de datos entre múltiples núcleos de caché, permitiendo que datos aún más distintos se pongan en caché. \textsc{CoreTime} \emph{scheduler} que se propone se basa en $O^2$ \emph{Scheduling}.
+
+\section{¿Qué tan exitosa es esta solución?}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ 
