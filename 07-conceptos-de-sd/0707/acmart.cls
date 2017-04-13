@@ -431,7 +431,7 @@ Computing Machinery]
    \geometry{twoside=true, head=1pc, foot=2pc,
      paperwidth=8.5in, paperheight=11in,
      includeheadfoot,
-     top=78pt, bottom=114pt, inner=81pt, outer=81pt
+     top=78pt, bottom=114pt, inner=70pt, outer=70pt
      }%
 \or % acmtog
    \geometry{twoside=true, head=1pc, foot=2pc,
