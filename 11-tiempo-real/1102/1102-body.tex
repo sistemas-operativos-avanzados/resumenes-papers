@@ -2,7 +2,7 @@
 
 \paragraph{\textnormal{\textbf{Conceptos errónes comunes}}} \textbf{1. No hay ciencia en el diseño de sistemas en tiempo real:} Es cierto que el diseño de sistemas en tiempo real es mayoritariamente \emph{ah hoc}. Esto no significa, sin embargo, que un enfoque científico no es posible. Investigaciones están iniciando con la inclusión de una métrica de tiempo para la especificación de un sistema y teoría semántica para lenguajes de programación en tiempo real. 
 
-\textbf{2. Los svances en hardware de supercomputadoras van a hacerse cargo de los requerimientos de tiempo real:} avances en el diseño de supercomputadoras probablemente va a aprovecharse de procesadores en paralelo y de la mejora del \emph{throughput} del sistema, pero esto no significa que las restricciones de tiempo se vayan a cumplir automáticamente. A menos que la arquitectura de la computadora sea modificada para coincidir con la aplicación, los procesadores y sus subsistemas de comunicación podrían no estar en la capacidad de manejar toda la carga de tareas y tráfico de tiempo crítico. De hecho, los problemas de \emph{real-time task and-communication scheduling} probablemente serán peores conforme más hardware sea usado. 
+\textbf{2. Los avances en hardware de supercomputadoras van a hacerse cargo de los requerimientos de tiempo real:} avances en el diseño de supercomputadoras probablemente va a aprovecharse de procesadores en paralelo y de la mejora del \emph{throughput} del sistema, pero esto no significa que las restricciones de tiempo se vayan a cumplir automáticamente. A menos que la arquitectura de la computadora sea modificada para coincidir con la aplicación, los procesadores y sus subsistemas de comunicación podrían no estar en la capacidad de manejar toda la carga de tareas y tráfico de tiempo crítico. De hecho, los problemas de \emph{real-time task and-communication scheduling} probablemente serán peores conforme más hardware sea usado. 
 
 \textbf{3. Computación en tiempo real es equivalente a computación rápida:} El objetivo de la computación rápida es la de minimizar el tiempo de respuesta promedio de un conjunto de tareas. Sin embargo, el objetivo en computación en tiempo real es cumplir con requisitos de tiempo individuales de cada tarea. En lugar de ser rápido\footnote{El cual, de todos modos es un término relativo.}, la propiedad más importante de un sistema en tiempo real debería de ser la preditibilidad, esto es, el comportamiento funcional y temporal debería ser tan determinístico como fuera necesario para satisfacer la especificación de un sistema. La computación rápida sirve de ayuda para cumplir con las especificaciones de tiempo, pero la computación rápida por sí sola no garantiza predictibilidad. Tal vez la mejor respuesta para aquellos quienes dicen que  dicen que computación en tiempo real es equivalente a computación rápida es formulando la siguiente pregunta: Dado un conjunto de requisitos de tiempo real demandantes y una implementación usando el mejor hardware posible, cómo se puede mostrar que el comportamiento relacionados con el tiempo se logran? La respuesta no es ``por medio de pruebas''. Se sabe que un procedimiento de verificación formal acoplado con pruebas podría mejorar substancialmente lo que se sabe en la actualidad. 
 
@@ -41,8 +41,29 @@ Presentar algunos problemas técnicos involucrados en el diseño de sistemas en 
 La computación en tiempo real es una amplia área abierta de investigación la cual le presenta muchos retos nuevos a la computación. Ha tenido pocos resultados y los diseñadores en la actualidad tienen poco que los pueda habilitar a manejar las restricciones de tiempo de los sistemas en tiempo real de forma efectiva. Además, se ha puesto poco énfasis en construir un base científica para lograr los resultados necesarios. Peor aún, mucho investigadores, gerentes y gobierno tienen conceptos erróneos serios con respecto a la computación en tiempo real.
 
 \section{¿Qué otras soluciones se han intentado para resolver este problema?}
-
+Aunque se menciona trabajo previo que se ha hecho en computación sobre teoría de \emph{scheduling}, ingeniería de rendimiento, bases de datos distribuidas, lenguajes de programación y \emph{supercomputing}, entre otros, esto no necesariamente va de la mano con requirimientos o necesidades específicas de la computación en tiempo real. 
      
 \section{¿Cuál es la solución propuesta por los autores?}
+El artículo tiene tres objetivos:
+\begin{enumerate}
+    \item Dar a conocer las ideas erróneas acerca de computación en tiempo real.
+    \item Discutir brevemente los problemas científicos fundamentales de computación en tiempo real.
+    \item Motivar la creciente investigación en sistemas en tiempo real.
+\end{enumerate}
+
 
 \section{¿Qué tan exitosa es esta solución?} 
+Se espera que los sistemas en tiempo real del futuro sean más grandes y complejos además de que van a trabajar en ambientes altamente dinámicos y distribuidos. Alcanzar estos retos depende de un esfuerzo coordinado de todos los aspectos del desarrollo de sitemas como:
+\begin{itemize}
+    \item Técnicas de verificación y especificación que puedan manejar necesidades de tiempo.
+    \item Metodologías que tomen en cuenta propiedades de tiempo desde el inicio del proceso de diseño.
+    \item Lenguajes de programación con características para expresar el comportamiento del tiempo.
+    \item Algoritmos de \emph{scheduling} que puedan manejar en una forma integrada
+    \begin{enumerate}
+        \item Estructuras de tareas complejas con restricciones de recursos y precedencia.
+        \item Recursos -- de comunicación, I/O.
+        \item Restricciones de tiempo de granularidad variada.
+    \end{enumerate}
+    \item Funciones de sistema operativo diseñadas para lidiar con gestión de recursos con restricciones de tiempo altamente integrada y cooperativa de una forma rápida y precedible.
+    \item Soporte de tolerancia a fallos, arquitecturas de comunicación y protocolos que requieran envío de mensajes de forma oportuna (con restricciones de tiempo en su entrega-recibo).
+\end{itemize}
